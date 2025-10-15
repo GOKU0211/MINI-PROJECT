@@ -18,7 +18,7 @@ def log(message):
 def listen_once():
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        log("🎤 Listening for command...")
+        log(" Listening for command...")
         audio = r.listen(source)
     try:
         command = r.recognize_google(audio).lower()
@@ -26,14 +26,25 @@ def listen_once():
 
         if "on" in command:
             requests.get(f"{ESP32_IP}/on")
-            log("💡 Light turned ON")
+            log(" Light turned ON")
         elif "off" in command:
             requests.get(f"{ESP32_IP}/off")
-            log("💤 Light turned OFF")
+            log(" Light turned OFF")
         else:
-            log("🤔 Command not recognized")
+            log(" Command not recognized")
         return command
     except sr.UnknownValueError:
-        log("❌ Sorry, I didn’t understand.")
+        log(" Sorry, I didn’t understand.")
     except sr.RequestError:
-        log("⚠️ Speech service error.")
+        log(" Speech service error.")
+
+import speech_recognition as sr
+
+def record_sample(filename="temp.wav", duration=3):
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print(" Recording... Speak now")
+        audio = r.record(source, duration=duration)
+    with open(filename, "wb") as f:
+        f.write(audio.get_wav_data())
+    return filename

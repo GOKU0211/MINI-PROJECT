@@ -1,6 +1,7 @@
 left to do
 
-the codew is now ready 
-abhi sirf anish ko test karna baki hai 
+the code is now ready 
+abhi sirf anish ko code test karna baki hai 
+to make the background of mic transparent put it in the code
 
 git push karra hu

@@ -4,17 +4,20 @@ from PIL import Image
 import voice_controlled as vc
 import threading
 import connector as cn
+import voice_recog as vr
+
 
 ctk.set_appearance_mode("dark")
 
 main=ctk.CTk()
 main.geometry("1200x720") 
 main.title("VOICE ASSISTANT")
+ 
 
-#importing sphere 
-img=ctk.CTkImage(light_image=Image.open(r"D:\MINI PROJECT\main mini project\MINI-PROJECT\MIC.png"),size=(100,100))
+#importing mic image  
+img=ctk.CTkImage(light_image=Image.open(r"D:\MINI PROJECT\main mini project\MINI-PROJECT\MIC2.png"),size=(100,100))
 #displaying it
-img_label = ctk.CTkLabel(main, image=img, text="")
+img_label = ctk.CTkLabel(main, image=img, text="",fg_color="black",corner_radius=100)
 img_label.pack(pady=(100, 20))
 
 
@@ -34,6 +37,25 @@ def update_output(message):
 # Connect GUI callback to voice module
 vc.update_callback = update_output
 
+#making a system for voice recognition
+def start_enrollment():
+    output_label.configure(text=" Recording new voice sample...")
+    
+    def enroll_thread():
+        path = vc.record_sample("new_voice.wav", duration=4)
+        vr.enroll_user(path, "owner")
+        output_label.configure(text=" Voice enrolled successfully. Click mic to verify.")
+    
+    threading.Thread(target=enroll_thread, daemon=True).start()
+
+enroll_btn = ctk.CTkButton(
+    main,
+    text="Enroll New Voice",
+    font=("Segoe UI Semibold", 18),
+    command=start_enrollment,
+)
+enroll_btn.pack(pady=(30, 0))
+
 
 #making the image a button
 def mic_button():
@@ -47,24 +69,36 @@ def mic_button():
 
 
 
-
-#funtion to start listening
-def start_listening_thread():
-    threading.Thread(target=start_listening, daemon=True).start()
 def start_listening():
-    output_label.configure(text=" Listening...")
-    result=vc.listen_once()
-    output_label.configure(text=result)
+    update_output(" Listening for verification...")
+    temp_audio = vr.record_temp()  # record user's new input
+    score, match = vr.verify_user(temp_audio, "owner")
 
-    #connecting to esp32
-    cn.send_command(result.lower())
+    print(f"[DEBUG] Voice match: {match} | Score: {score}")
 
-#on clicking 
+    if match:
+        update_output(" Voice verified. Listening for commands...")
+        result = vc.listen_once()  # your normal speech command function
+        update_output(f"You said: {result}")
+
+        # Send to ESP32
+        if "on" in result.lower():
+            cn.send_command("on")
+            update_output(" Light turned ON")
+        elif "off" in result.lower():
+            cn.send_command("off")
+            update_output(" Light turned OFF")
+        else:
+            update_output(" Command not recognized")
+
+    else:
+        update_output(" Voice not recognized. Access denied.")
+
+
+# On mic click
 def on_click(event=None):
     mic_button()
-    output_label.configure(text=" Listening... Please speak now.")
-    threading.Thread(target=vc.listen_once,daemon=True).start()
-
+    threading.Thread(target=start_listening, daemon=True).start()
 
 
 #binding the click
