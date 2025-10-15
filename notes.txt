@@ -1,4 +1,6 @@
 left to do
 
-start_listeinng wrapper banan hai interface.py me 
-threading ka age ka kaam karna hai also joining vc.py
+the codew is now ready 
+abhi sirf anish ko test karna baki hai 
+
+git push karra hu

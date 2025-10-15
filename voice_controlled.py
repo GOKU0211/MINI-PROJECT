@@ -1,30 +1,39 @@
 import speech_recognition as sr
 import requests
 
-# Replace this with the IP printed by ESP32 in Serial Monitor
-ESP32_IP = "http://192.168.1.50"  # Example, update with real IP
+ESP32_IP = "http://192.168.1.50"  # change to your ESP32 IP
 
-def listen_command():
+# --- add this callback variable ---
+update_callback = None  # this will be linked to GUI later
+
+
+def log(message):
+    """Send message to GUI if available, otherwise print."""
+    if update_callback:
+        update_callback(message)
+    else:
+        print(message)
+
+
+def listen_once():
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Say something (like 'light on' or 'light off')...")
+        log("🎤 Listening for command...")
         audio = r.listen(source)
     try:
         command = r.recognize_google(audio).lower()
-        print("You said:", command)
+        log(f"You said: {command}")
+
+        if "on" in command:
+            requests.get(f"{ESP32_IP}/on")
+            log("💡 Light turned ON")
+        elif "off" in command:
+            requests.get(f"{ESP32_IP}/off")
+            log("💤 Light turned OFF")
+        else:
+            log("🤔 Command not recognized")
         return command
     except sr.UnknownValueError:
-        print("Sorry, I didn’t understand.")
-        return ""
+        log("❌ Sorry, I didn’t understand.")
     except sr.RequestError:
-        print("Speech service error.")
-        return ""
-
-while True:
-    cmd = listen_command()
-    if "on" in cmd:
-        requests.get(f"{ESP32_IP}/on")
-        print("Light turned ON")
-    elif "off" in cmd:
-        requests.get(f"{ESP32_IP}/off")
-        print("Light turned OFF")
+        log("⚠️ Speech service error.")
