@@ -79,17 +79,17 @@ def start_listening():
     if match:
         update_output(" Voice verified. Listening for commands...")
         result = vc.listen_once()  # your normal speech command function
-        update_output(f"You said: {result}")
+        result_text = result.lower()
 
         # Send to ESP32
-        if "on" in result.lower():
-            cn.send_command("on")
-            update_output(" Light turned ON")
-        elif "off" in result.lower():
-            cn.send_command("off")
-            update_output(" Light turned OFF")
+        if "turn on" in result_text or "light on" in result_text:
+            cn.send_command("ON")  # Call the SERIAL function
+            update_output(" Command recognized: Light ON")
+        elif "turn off" in result_text or "light off" in result_text:
+            cn.send_command("OFF") # Call the SERIAL function
+            update_output(" Command recognized: Light OFF")
         else:
-            update_output(" Command not recognized")
+            update_output(f" Voice command '{result}' not recognized as ON/OFF.")
 
     else:
         update_output(" Voice not recognized. Access denied.")
